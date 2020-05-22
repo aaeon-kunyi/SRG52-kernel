@@ -1,0 +1,94 @@
+/*
+ * Copyright (C) 2012 Texas Instruments Incorporated - http://www.ti.com/
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/ {
+	wlan_en_reg: fixedregulator@1 {
+		compatible = "regulator-fixed";
+		regulator-name = "wlan-en-regulator";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		gpio = <&gpio0 23 0>;
+
+		enable-active-high;
+	};
+
+	btwilink {
+                compatible = "btwilink";
+        };
+
+};
+
+&am33xx_pinmux {
+	uart5_pins_default: pinmux_uart1_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x908, PIN_INPUT | MUX_MODE3) /* (H16) gmii1_col.uart5_rxd */
+			AM33XX_IOPAD(0x944, PIN_OUTPUT | MUX_MODE3) /* (H18) rmii1_refclk.uart5_txd */
+			AM33XX_IOPAD(0x90c, PIN_INPUT | MUX_MODE5) /* (H17) gmii1_crs.uart5_ctsn */
+			AM33XX_IOPAD(0x910, PIN_OUTPUT_PULLDOWN | MUX_MODE5) /* (J15) gmii1_rxer.uart5_rtsn */
+		>;
+	};
+
+	bt_pins_default: pinmux_bt_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x89c, PIN_OUTPUT_PULLUP | MUX_MODE7) /* (T6) gpmc_be0n_cle.gpio2[5] */
+		>;
+	};
+
+	mmc3_pins: pinmux_mmc3_pins {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x88c, PIN_INPUT_PULLUP | MUX_MODE3)
+			AM33XX_IOPAD(0x888, PIN_INPUT_PULLUP | MUX_MODE3)
+			AM33XX_IOPAD(0x830, PIN_INPUT_PULLUP | MUX_MODE3)
+			AM33XX_IOPAD(0x834, PIN_INPUT_PULLUP | MUX_MODE3)
+			AM33XX_IOPAD(0x838, PIN_INPUT_PULLUP | MUX_MODE3)
+			AM33XX_IOPAD(0x83c, PIN_INPUT_PULLUP | MUX_MODE3)
+		>;
+	};
+
+	wlan_pins_default: pinmux_wlan_pins_default {
+		pinctrl-single,pins = <
+			AM33XX_IOPAD(0x824, PIN_OUTPUT | MUX_MODE7) /* (T10) gpmc_ad9.gpio0_23 WL_EN*/
+			AM33XX_IOPAD(0x820, PIN_INPUT_PULLDOWN | MUX_MODE7) /* (U10) gpmc_ad8.gpio0_22 WL_IRQ*/
+		>;
+	};
+
+};
+
+&uart5 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart5_pins_default &bt_pins_default>;
+	status = "okay";
+};
+
+&mmc3 {
+	status = "okay";
+	/* these are on the crossbar and are outlined in the
+	xbar-event-map element */
+	dmas = <&edma_xbar 12 0 1
+		&edma_xbar 13 0 2>;
+	dma-names = "tx", "rx";
+	vmmc-supply = <&wlan_en_reg>;
+	bus-width = <4>;
+	ti,needs-special-hs-handling;
+	ti,non-removable;
+	cap-power-off-card;
+	keep-power-in-suspend;
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc3_pins &wlan_pins_default>;
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+	wlcore: wlcore@0 {
+		compatible = "ti,wl1835";
+		reg = <2>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <22 IRQ_TYPE_EDGE_RISING>;
+	};
+};
+

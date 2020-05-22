@@ -690,6 +690,11 @@ dtb-$(CONFIG_SOC_TI81XX) += \
 	dm8148-t410.dtb \
 	dm8168-evm.dtb \
 	dra62x-j5eco-evm.dtb
+
+ifeq ($(CONFIG_AAEON),y)
+dtb-$(CONFIG_AAEON) += \
+	am335x-srt3352c.dtb
+else
 dtb-$(CONFIG_SOC_AM33XX) += \
 	am335x-baltos-ir2110.dtb \
 	am335x-baltos-ir3220.dtb \
@@ -721,6 +726,7 @@ dtb-$(CONFIG_SOC_AM33XX) += \
 	am335x-sl50.dtb \
 	am335x-wega-rdk.dtb \
 	am335x-osd3358-sm-red.dtb
+endif
 dtb-$(CONFIG_ARCH_OMAP4) += \
 	omap4-droid4-xt894.dtb \
 	omap4-duovero-parlor.dtb \
